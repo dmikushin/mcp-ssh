@@ -137,37 +137,37 @@ func main() {
 	// ssh_upload
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "ssh_upload",
-		Description: "Upload a file to a remote host via scp",
+		Description: "Upload a file to a remote host (uses rsync if available, falls back to scp)",
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in UploadInput) (*mcp.CallToolResult, any, error) {
 		if in.Host == "" || in.LocalPath == "" || in.RemotePath == "" {
 			return errorResult("host, local_path, and remote_path are required")
 		}
-		result, err := scpUpload(ctx, in.Host, in.LocalPath, in.RemotePath, in.Timeout)
+		result, method, err := fileUpload(ctx, in.Host, in.LocalPath, in.RemotePath, in.Timeout)
 		if err != nil {
-			return errorResult(fmt.Sprintf("SCP error: %v", err))
+			return errorResult(fmt.Sprintf("%s error: %v", method, err))
 		}
 		if result.ExitCode != 0 {
 			return errorResult(execResultToText(result))
 		}
-		return textResult(fmt.Sprintf("Uploaded %s to %s:%s", in.LocalPath, in.Host, in.RemotePath))
+		return textResult(fmt.Sprintf("Uploaded %s to %s:%s (via %s)", in.LocalPath, in.Host, in.RemotePath, method))
 	})
 
 	// ssh_download
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "ssh_download",
-		Description: "Download a file from a remote host via scp",
+		Description: "Download a file from a remote host (uses rsync if available, falls back to scp)",
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in DownloadInput) (*mcp.CallToolResult, any, error) {
 		if in.Host == "" || in.RemotePath == "" || in.LocalPath == "" {
 			return errorResult("host, remote_path, and local_path are required")
 		}
-		result, err := scpDownload(ctx, in.Host, in.RemotePath, in.LocalPath, in.Timeout)
+		result, method, err := fileDownload(ctx, in.Host, in.RemotePath, in.LocalPath, in.Timeout)
 		if err != nil {
-			return errorResult(fmt.Sprintf("SCP error: %v", err))
+			return errorResult(fmt.Sprintf("%s error: %v", method, err))
 		}
 		if result.ExitCode != 0 {
 			return errorResult(execResultToText(result))
 		}
-		return textResult(fmt.Sprintf("Downloaded %s:%s to %s", in.Host, in.RemotePath, in.LocalPath))
+		return textResult(fmt.Sprintf("Downloaded %s:%s to %s (via %s)", in.Host, in.RemotePath, in.LocalPath, method))
 	})
 
 	// ssh_check
