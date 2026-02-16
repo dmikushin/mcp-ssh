@@ -69,7 +69,7 @@ func sshRun(ctx context.Context, host, command string, timeoutSec int) (*ExecRes
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "ssh", host, command)
+	cmd := exec.CommandContext(ctx, "ssh", "-T", host, command)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
